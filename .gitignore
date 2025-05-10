@@ -1,0 +1,27 @@
+.env
+venv/
+__pycache__/
+*.pyc
+links.db # Jeśli nie chcesz go wersjonować
+instance/ # Na wypadek użycia tej metody w przyszłości
+# Pliki specyficzne dla środowiska Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Plik ze zmiennymi środowiskowymi - NIGDY nie dodawaj go do repozytorium!
+.env
+
+# Baza danych SQLite (jeśli nie chcesz jej wersjonować)
+links.db
+
+# Folder instancji Flaska (jeśli byłby używany)
+instance/
+
+# Pliki generowane przez system lub IDE
+.idea/
+.vscode/
+*.swp
+*~

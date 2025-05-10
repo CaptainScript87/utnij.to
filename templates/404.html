@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nie znaleziono - 404</title>
+     <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; margin: 0; padding: 0; background-color: #f0f2f5; color: #333; display: flex; justify-content: center; align-items: center; min-height: 100vh; text-align: center; }
+        .container { max-width: 600px; width: 90%; padding: 40px; background-color: #fff; border-radius: 10px; box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
+        h1 { color: #e74c3c; margin-bottom: 20px; font-size: 2.8em; font-weight: 600;}
+        p { font-size: 1.1em; margin-bottom: 25px; color: #555;}
+        a { color: #007bff; text-decoration: none; font-weight: 600; }
+        a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Oops! Strona nie znaleziona (404)</h1>
+        <p>Wygląda na to, że link, którego szukasz, nie istnieje lub został usunięty.</p>
+        <p><a href="{{ url_for('index') }}">Wróć na stronę główną</a></p>
+    </div>
+</body>
+</html>
