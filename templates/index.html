@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Skracacz Linków v2.0 - WebSockets</title>
+    <title>Skracacz Linków v2.4 - WebSockets Poprawka</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; margin: 0; padding: 0; background-color: #f0f2f5; color: #333; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
         .container { max-width: 600px; width: 90%; padding: 30px; background-color: #fff; border-radius: 10px; box-shadow: 0 6px 20px rgba(0,0,0,0.1); text-align: center; }
@@ -30,7 +30,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>Skróć Swój Link! <span style="font-size: 0.6em; color: #007bff;">v2.0</span></h1>
+        <h1>Skróć Swój Link! <span style="font-size: 0.6em; color: #007bff;">v2.4 Poprawka</span></h1>
 
         {% if error %}
             <p class="error">{{ error }}</p>
@@ -48,17 +48,116 @@
             <div class="result">
                 <p>Oryginalny URL: <a href="{{ original_url_display }}" target="_blank" rel="noopener noreferrer">{{ original_url_display }}</a></p>
                 <p><strong>Skrócony URL: <a href="{{ short_url }}" target="_blank" rel="noopener noreferrer">{{ short_url }}</a></strong></p>
-                {# Zmieniamy sposób wyświetlania licznika kliknięć, aby łatwiej go aktualizować przez JS #}
                 <p>Liczba kliknięć: <span id="clicks-{{ short_code_for_js }}">{{ clicks }}</span></p>
                 <div class="copy-group">
                     <input type="text" value="{{ short_url }}" id="shortenedLinkInput" readonly>
-                    <button onclick="copyToClipboard()">Kopiuj</button>
+                    <button type="button" onclick="copyToClipboard()">Kopiuj</button>
                 </div>
                 <div id="copyFeedback"></div>
             </div>
         {% endif %}
-        <div id="ws-status"></div>
+        <div id="ws-status">Wyświetlacz statusu WebSocket...</div>
     </div>
 
     {# Biblioteka Socket.IO po stronie klienta - z CDN #}
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js" integrity="sha512-11t8Q+vY9FcfSLH7Av LumTUX_iOsFpVKT الادراج ToKCWeDv0/9UJ0DkDaNCOWrz7KSH2cSAeIQT7SirCA
+    {# POPRAWIONY ATRYBUT INTEGRITY PONIŻEJ #}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js" integrity="sha512-11t8Q+vY9JlCrr+PveZKTYJq8n7O09Y5X/pk/aMd3vJugSvu4xOunGEUzaADqL3I8cZKE/pBwwCfXzDkRJh2sQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    
+    <script>
+        // Definicja funkcji copyToClipboard w globalnym zakresie
+        function copyToClipboard() {
+            var copyText = document.getElementById("shortenedLinkInput");
+            var feedback = document.getElementById("copyFeedback");
+            
+            if (!copyText || !feedback) {
+                console.error("CLIENT: Elementy do kopiowania lub feedbacku nie znalezione.");
+                return;
+            }
+
+            copyText.select();
+            copyText.setSelectionRange(0, 99999); // Dla urządzeń mobilnych
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(copyText.value).then(function() {
+                    feedback.textContent = 'Skopiowano do schowka!';
+                    console.log('CLIENT: Async: Copying to clipboard was successful!');
+                }, function(err) {
+                    feedback.textContent = 'Błąd kopiowania (nowe API).';
+                    console.error('CLIENT: Async: Could not copy text: ', err);
+                    try {
+                        var successful = document.execCommand('copy');
+                        if (successful) {
+                            feedback.textContent = 'Skopiowano (fallback)!';
+                        } else {
+                            feedback.textContent = 'Błąd kopiowania (fallback).';
+                        }
+                    } catch (execErr) {
+                        feedback.textContent = 'Krytyczny błąd kopiowania.';
+                        console.error('CLIENT: Fallback error:', execErr);
+                    }
+                });
+            } else {
+                console.log('CLIENT: Using fallback for copy to clipboard (document.execCommand).');
+                try {
+                    var successful = document.execCommand('copy');
+                    if (successful) {
+                        feedback.textContent = 'Skopiowano (fallback)!';
+                    } else {
+                        feedback.textContent = 'Błąd kopiowania (fallback).';
+                    }
+                } catch (execErr) {
+                    feedback.textContent = 'Krytyczny błąd kopiowania.';
+                    console.error('CLIENT: Fallback error:', execErr);
+                }
+            }
+            setTimeout(function(){ feedback.textContent = ''; }, 3000);
+        }
+
+        // Używamy poprzedniej wersji kodu JS, która była warunkowa,
+        // ale teraz biblioteka `io` powinna być dostępna.
+        // Jeśli chcesz, możemy wrócić do wersji "TEST", ale ta jest bardziej prawidłowa docelowo.
+        {% if short_code_for_js %}
+            console.log('CLIENT: short_code_for_js is present: {{ short_code_for_js }}. Initializing WebSocket client.');
+            var socket = io(); 
+            var currentShortCode = "{{ short_code_for_js }}"; 
+            var wsStatusElement = document.getElementById('ws-status');
+
+            socket.on('connect', function() {
+                console.log('CLIENT: Connected to WebSocket server! SID: ' + socket.id);
+                if(wsStatusElement) wsStatusElement.textContent = 'Połączono z WebSocket (SID: ' + socket.id + ')';
+            });
+
+            socket.on('disconnect', function(reason) {
+                console.log('CLIENT: Disconnected from WebSocket server. Reason: ' + reason);
+                if(wsStatusElement) wsStatusElement.textContent = 'Rozłączono z WebSocket. Powód: ' + reason;
+            });
+
+            socket.on('connect_error', (err) => {
+                console.error('CLIENT: WebSocket connection error:', err);
+                if(wsStatusElement) wsStatusElement.textContent = 'Błąd połączenia WebSocket: ' + err.message;
+            });
+
+            socket.on('click_update', function(data) {
+                console.log('CLIENT: Received click update:', data);
+                if (data.short_code === currentShortCode) {
+                    var clicksElement = document.getElementById('clicks-' + data.short_code);
+                    if (clicksElement) {
+                        clicksElement.textContent = data.clicks;
+                        console.log('CLIENT: Clicks updated on page for ' + data.short_code + ' to ' + data.clicks);
+                    } else {
+                        console.warn('CLIENT: Clicks element not found for short_code:', data.short_code);
+                    }
+                } else {
+                    console.log('CLIENT: Click update for a different short_code received. Current:', currentShortCode, 'Received:', data.short_code);
+                }
+            });
+        {% else %}
+            console.log('CLIENT: No short_code_for_js, WebSocket client for click updates not initialized on this page load.');
+            var wsStatusElement = document.getElementById('ws-status');
+            if (wsStatusElement) {
+                 wsStatusElement.textContent = 'WebSocket nieaktywny (brak skróconego linku).';
+            }
+        {% endif %}
+    </script>
+</body>
+</html>
